@@ -7,9 +7,10 @@ from matplotlib import pyplot as plt
 
 
 
-folder = 'JPEGImages'
 
-folder_path = '/home/simenvg/environments/my_env/datasyn/project/' + folder
+
+folder_path = '/home/simenvg/environments/my_env/datasyn/project/JPEGImages'
+folder_path_resized = '/home/simenvg/environments/my_env/datasyn/project/resized_images'
 
 
 BLUE = (255,0,0)
@@ -21,11 +22,17 @@ YELLOW = (255,255,0)
 images_YOLO = pickle.load(open(os.path.join(folder_path,'YOLO.txt'), "rb"))
 images_GT = pickle.load(open(os.path.join(folder_path,'ground_truth.txt'), "rb"))
 
-filenames = []
+images_YOLO_resized = pickle.load(open(os.path.join(folder_path_resized,'YOLO.txt'), "rb"))
+images_GT_resized = pickle.load(open(os.path.join(folder_path_resized,'ground_truth_resized.txt'), "rb"))
 
+filenames = []
+filenames_resized = []
 
 for keys, values in images_GT.items():
 	filenames.append(keys)
+
+for keys, values in images_GT_resized.items():
+	filenames_resized.append(keys)
 
 
 images_YOLO_conf_over_25 = {}
@@ -125,14 +132,16 @@ def boxes_based_on_score(filenames, detected_boxes, conf_level):
 	return images
 
 
-def plot_precision_recall(yolo_prec_recall, title):
-	# print('Availible variables to plot: {}'.format(history.history.keys()))
+def plot_precision_recall(yolo_prec_recall, yolo_prec_recall_resized):
 	fig_1, ax_1 = plt.subplots()
-	#fig_2, ax_2 = plt.subplots()
 	for i in range(len(yolo_prec_recall[0])):
 		if yolo_prec_recall[0][i] != -1:
-			ax_1.plot(yolo_prec_recall[0][i], yolo_prec_recall[1][i], 'o', color='red', label='YOLO, AP: ' + str(round(get_average_precision(yolo_prec_recall),2)))
-	ax_1.set_title(title)
+			ax_1.plot(yolo_prec_recall[0][i], yolo_prec_recall[1][i], 'o', color='red', label='YOLO')#, AP: ' + str(round(get_average_precision(yolo_prec_recall),2)))
+	for i in range(len(yolo_prec_recall[0])):
+		if yolo_prec_recall_resized[0][i] != -1:
+			ax_1.plot(yolo_prec_recall_resized[0][i], yolo_prec_recall[1][i], 'o', color='blue', label='YOLO resized images')
+	ax_1.set_title('Precision/Recall')
+	plt.grid()
 	plt.legend()
 	plt.xlabel('Recall')
 	plt.ylabel('Precision')
@@ -169,12 +178,13 @@ def get_average_precision(prec_recall):
 
 
 
-#yolo_prec_recall = generate_recall_and_precisions(filenames, images_GT, images_YOLO, thresholds)
+yolo_prec_recall = generate_recall_and_precisions(filenames, images_GT, images_YOLO, thresholds)
+yolo_prec_recall_resized = generate_recall_and_precisions(filenames_resized, images_GT_resized, images_YOLO_resized, thresholds)
 
 
-#print('YOLO AP: ', get_average_precision(yolo_prec_recall))
+print('YOLO AP: ', get_average_precision(yolo_prec_recall))
 
-#plot_precision_recall(yolo_prec_recall, folder)
+plot_precision_recall(yolo_prec_recall, yolo_prec_recall_resized)
 
 sum_GT_boxes = 0
 sum_validated_boxes = 0
@@ -203,5 +213,15 @@ def draw_boxes(image_name, GT_boxes, detected_boxes):
 	cv2.waitKey(0)
 
 
-for image in filenames:
-	draw_boxes(image, images_GT[image], images_YOLO_conf_over_25[image][0])
+# for image in filenames:
+# 	draw_boxes(image, images_GT[image], images_YOLO_conf_over_25[image][0])
+
+
+# image1 = 'resized_93_flip.jpg'
+# image2 = 'resized_48.jpg'
+# image3 = 'resized_80.jpg'
+# image4 = 'resized_106_flip.jpg'
+# draw_boxes(image1, images_GT[image1], images_YOLO_conf_over_25[image1][0])
+# draw_boxes(image2, images_GT[image2], images_YOLO_conf_over_25[image2][0])
+# draw_boxes(image3, images_GT[image3], images_YOLO_conf_over_25[image3][0])
+# draw_boxes(image4, images_GT[image4], images_YOLO_conf_over_25[image4][0])
